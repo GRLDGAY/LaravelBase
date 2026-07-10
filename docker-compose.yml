@@ -5,7 +5,7 @@ services:
   app:
     image: mcr.microsoft.com/devcontainers/php:8.4
 
-    working_dir: /workspace/src
+    working_dir: /workspace/projetLaravel
 
     volumes:
       - .:/workspace
