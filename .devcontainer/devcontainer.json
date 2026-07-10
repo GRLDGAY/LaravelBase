@@ -14,19 +14,23 @@
         8080
     ],
 
+    "postCreateCommand": "composer --version",
+
     "customizations": {
         "vscode": {
             "extensions": [
                 "bmewburn.vscode-intelephense-client",
                 "onecentlin.laravel-blade",
                 "xdebug.php-debug",
-                "MehediDracula.php-namespace-resolver",
-                "GitHub.copilot",
-                "GitHub.copilot-chat"
+                "MehediDracula.php-namespace-resolver"
             ],
+
             "settings": {
                 "php.validate.executablePath": "/usr/local/bin/php",
-                "editor.formatOnSave": true
+                "editor.formatOnSave": true,
+                "files.exclude": {
+                    "**/vendor": true
+                }
             }
         }
     }
