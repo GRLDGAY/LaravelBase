@@ -1,0 +1,33 @@
+{
+    "name": "LaravelBase",
+
+    "dockerComposeFile": [
+        "../docker-compose.yml"
+    ],
+
+    "service": "app",
+
+    "workspaceFolder": "/workspace/src",
+
+    "forwardPorts": [
+        8000,
+        8080
+    ],
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "onecentlin.laravel-blade",
+                "xdebug.php-debug",
+                "MehediDracula.php-namespace-resolver",
+                "GitHub.copilot",
+                "GitHub.copilot-chat"
+            ],
+            "settings": {
+                "php.validate.executablePath": "/usr/local/bin/php",
+                "editor.formatOnSave": true
+            }
+        }
+    }
+}
