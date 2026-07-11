@@ -2,19 +2,47 @@
 
 ## Présentation
 
-Ce dépôt contient un environnement de développement hébergé dans **GitHub Codespaces**.
+Ce dépôt constitue un **environnement de développement prêt à accueillir des projets Laravel**.
 
-L'objectif est de disposer d'un environnement prêt à accueillir un projet Laravel sans avoir à installer localement PHP, Composer, MySQL ou un serveur de base de données.
+Il utilise **GitHub Codespaces** et Docker afin de disposer d'un environnement de développement complet dans le cloud.
 
-Le Codespace est créé à partir de ce dépôt GitHub et s'exécute dans le cloud.
+Aucune installation locale de PHP, Composer ou MySQL n'est nécessaire.
 
-## Architecture de l'environnement
+> **Laravel n'est pas installé ni paramétré dans ce dépôt modèle.**
 
-Le Codespace s'appuie sur plusieurs conteneurs Docker définis dans le fichier `docker-compose.yml`.
+Chaque dépôt créé à partir de `LaravelBase` pourra installer et configurer son propre projet Laravel.
 
-### Conteneur `app`
+---
+
+# Architecture de l'environnement
+
+Le Codespace utilise trois conteneurs Docker :
+
+```text
+GitHub Codespace
+│
+├── app
+│   ├── PHP 8.4
+│   ├── Composer
+│   ├── PDO MySQL
+│   └── projetLaravel
+│
+├── mysql
+│   └── MySQL 8.4
+│
+└── phpmyadmin
+    └── Interface Web de gestion MySQL
+```
+
+Les conteneurs communiquent entre eux grâce au réseau Docker interne.
+
+---
+
+# Conteneur `app`
 
 Le conteneur `app` constitue l'environnement principal de développement.
+
+VS Code est connecté à ce conteneur.
 
 Il contient notamment :
 
@@ -22,106 +50,293 @@ Il contient notamment :
 - Composer ;
 - Git ;
 - un terminal Linux ;
-- les outils nécessaires au développement PHP.
+- le pilote PHP `pdo_mysql`.
 
-VS Code est connecté à ce conteneur.
+Le dossier de travail est :
 
-Le dossier de travail utilisé dans VS Code est :
-
+```text
 /workspace/projetLaravel
+```
 
-Le port `8000` est prévu pour permettre l'accès à l'application Laravel depuis un navigateur.
+Le port `8000` est réservé au serveur de développement Laravel.
 
-### Conteneur `mysql`
+---
 
-Le conteneur `mysql` héberge le serveur de bases de données MySQL 8.4.
+# Pilote PDO MySQL
 
-Les autres conteneurs communiquent avec ce serveur grâce au réseau Docker interne.
+Le pilote PHP :
 
-Le nom d'hôte du serveur MySQL est :
+```text
+pdo_mysql
+```
 
+est installé automatiquement dans le conteneur `app`.
+
+Il permet à PHP et Laravel de communiquer avec le serveur MySQL.
+
+Sa présence peut être vérifiée avec la commande :
+
+```bash
+php -m | grep pdo_mysql
+```
+
+Résultat attendu :
+
+```text
+pdo_mysql
+```
+
+---
+
+# Conteneur `mysql`
+
+Le conteneur `mysql` héberge le serveur de bases de données **MySQL 8.4**.
+
+Le nom du serveur sur le réseau Docker est :
+
+```text
 mysql
+```
 
-Le port MySQL utilisé sur le réseau interne est :
+Le port MySQL interne est :
 
+```text
 3306
+```
 
-Les données MySQL sont enregistrées dans un volume Docker nommé `mysql-data`.
+Aucune base de données applicative n'est créée automatiquement.
 
-Ce volume permet de conserver les bases de données lors du redémarrage des conteneurs.
+Les bases nécessaires aux projets doivent être créées manuellement.
 
-### Conteneur `phpmyadmin`
+Les données MySQL sont stockées dans le volume Docker :
+
+```text
+mysql-data
+```
+
+Ce volume assure la persistance des bases de données lors du redémarrage des conteneurs.
+
+---
+
+# Conteneur `phpmyadmin`
 
 Le conteneur `phpmyadmin` fournit une interface Web permettant d'administrer le serveur MySQL.
 
-phpMyAdmin est accessible depuis le port `8080` du Codespace.
+phpMyAdmin est accessible depuis le port :
+
+```text
+8080
+```
 
 Paramètres de connexion :
 
-- Serveur : `mysql`
-- Utilisateur : `root`
-- Mot de passe : `root`
+```text
+Serveur      : mysql
+Utilisateur  : root
+Mot de passe : root
+```
 
-## Configuration du Codespace
+---
 
-Le fichier `.devcontainer/devcontainer.json` configure l'environnement GitHub Codespaces.
+# Fichiers de configuration
 
-Il indique notamment :
+L'environnement utilise trois fichiers principaux :
 
-- le fichier Docker Compose à utiliser ;
+```text
+LaravelBase
+│
+├── .devcontainer
+│   ├── devcontainer.json
+│   └── Dockerfile
+│
+├── docker-compose.yml
+│
+└── projetLaravel
+```
+
+## `devcontainer.json`
+
+Le fichier :
+
+```text
+.devcontainer/devcontainer.json
+```
+
+configure GitHub Codespaces et VS Code.
+
+Il définit notamment :
+
+- le fichier Docker Compose utilisé ;
 - le conteneur `app` comme environnement de développement ;
 - le dossier `/workspace/projetLaravel` comme dossier de travail ;
-- les ports `8000` et `8080` à rendre accessibles ;
-- les extensions VS Code à installer.
+- les ports `8000` et `8080` ;
+- les extensions VS Code installées automatiquement.
 
-Lors de la création du Codespace, la commande suivante est également exécutée :
+---
 
-composer --version
+## `docker-compose.yml`
 
-Elle permet de vérifier que Composer est correctement installé dans le conteneur `app`.
+Le fichier :
 
-## Hébergement
+```text
+docker-compose.yml
+```
 
-GitHub Codespaces est un service proposé par GitHub.
+définit les conteneurs utilisés par l'environnement :
 
-L'infrastructure utilisée pour exécuter les Codespaces repose sur Microsoft Azure.
+- `app` ;
+- `mysql` ;
+- `phpmyadmin`.
 
-Lors de la création du Codespace :
+Il définit également :
 
-1. GitHub prépare l'environnement de développement dans le cloud.
-2. Le dépôt GitHub est cloné dans le Codespace.
-3. Le fichier `.devcontainer/devcontainer.json` est lu.
-4. Docker Compose démarre les conteneurs `app`, `mysql` et `phpmyadmin`.
-5. VS Code est connecté au conteneur `app`.
+- les volumes ;
+- les ports ;
+- les paramètres MySQL ;
+- les relations entre les conteneurs.
 
-Le développement peut ainsi être réalisé directement dans le navigateur sans cloner le dépôt sur un ordinateur local.
+---
 
-## État actuel du projet
+## `Dockerfile`
 
-L'environnement de développement est actuellement opérationnel.
+Le fichier :
 
-Les éléments suivants sont installés et configurés :
+```text
+.devcontainer/Dockerfile
+```
+
+personnalise le conteneur `app`.
+
+Il utilise l'image PHP 8.4 pour Dev Containers et installe le pilote :
+
+```text
+pdo_mysql
+```
+
+L'installation est réalisée lors de la construction du conteneur.
+
+Ainsi, chaque nouveau Codespace créé dispose automatiquement du pilote MySQL pour PHP.
+
+---
+
+# Rôle des fichiers de configuration
+
+```text
+devcontainer.json
+        │
+        │ Configure Codespaces et VS Code
+        ▼
+docker-compose.yml
+        │
+        │ Définit et relie les conteneurs
+        ▼
+Dockerfile
+        │
+        │ Personnalise le conteneur app
+        ▼
+PHP 8.4 + Composer + PDO MySQL
+```
+
+---
+
+# État actuel du dépôt modèle
+
+Les composants suivants sont installés et configurés :
 
 - GitHub Codespaces ;
 - Docker Compose ;
 - PHP 8.4 ;
 - Composer ;
+- PDO MySQL ;
 - MySQL 8.4 ;
 - phpMyAdmin ;
-- les extensions VS Code nécessaires au développement PHP.
+- extensions VS Code pour le développement PHP et Laravel.
 
-> **Laravel n'est pas encore installé ni paramétré.**
+> **Laravel n'est pas installé ni paramétré dans le dépôt modèle.**
 
-Le dossier `projetLaravel` est actuellement destiné à accueillir le futur projet Laravel.
+Le dossier :
 
-La prochaine étape consistera à installer Laravel, puis à configurer sa connexion au serveur MySQL.
-
-## Prochaine étape : installation de Laravel
-
-Laravel sera installé dans le dossier :
-
+```text
 /workspace/projetLaravel
+```
 
-L'installation sera réalisée avec Composer.
+est destiné à accueillir le futur projet Laravel.
 
-La configuration du fichier `.env` permettra ensuite de connecter Laravel au conteneur MySQL en utilisant le nom de service Docker `mysql`.
+---
+
+# Créer un nouveau projet
+
+`LaravelBase` est configuré comme dépôt modèle GitHub.
+
+Pour créer un projet :
+
+1. Cliquer sur `Use this template`.
+2. Choisir `Create a new repository`.
+3. Donner un nom au nouveau dépôt.
+4. Créer le dépôt.
+5. Créer un Codespace depuis ce nouveau dépôt.
+
+GitHub Codespaces construit alors automatiquement l'environnement de développement.
+
+Les trois conteneurs sont démarrés :
+
+```text
+app
+mysql
+phpmyadmin
+```
+
+Le conteneur `app` contient automatiquement PHP, Composer et PDO MySQL.
+
+---
+
+# Installation de Laravel
+
+Dans le terminal du Codespace :
+
+```bash
+cd /workspace/projetLaravel
+```
+
+Installer Laravel :
+
+```bash
+composer create-project laravel/laravel .
+```
+
+Vérifier l'installation :
+
+```bash
+php artisan --version
+```
+
+---
+
+# Configuration de MySQL dans Laravel
+
+Après avoir créé la base de données dans phpMyAdmin, modifier le fichier `.env` de Laravel.
+
+Exemple :
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=nom_de_la_base
+DB_USERNAME=root
+DB_PASSWORD=root
+```
+
+Le nom :
+
+```text
+mysql
+```
+
+correspond au nom du service MySQL défini dans `docker-compose.yml`.
+
+La connexion peut ensuite être testée avec :
+
+```bash
+php artisan migrate
+```
