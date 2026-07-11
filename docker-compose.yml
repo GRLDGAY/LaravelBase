@@ -3,7 +3,9 @@ version: "3.9"
 services:
 
   app:
-    image: mcr.microsoft.com/devcontainers/php:8.4
+   build:
+    context: .
+    dockerfile: .devcontainer/Dockerfile
 
     working_dir: /workspace/projetLaravel
 
