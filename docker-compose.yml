@@ -3,9 +3,9 @@ version: "3.9"
 services:
 
   app:
-   build:
-    context: .
-    dockerfile: .devcontainer/Dockerfile
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
 
     working_dir: /workspace/projetLaravel
 
