@@ -14,7 +14,7 @@
         8080
     ],
 
-    "postCreateCommand": "composer --version",
+"postCreateCommand": "setfacl -m u:www-data:rwx /workspace/projetLaravel && setfacl -d -m u:www-data:rwx /workspace/projetLaravel && composer --version",
 
     "customizations": {
         "vscode": {
