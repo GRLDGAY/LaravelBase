@@ -10,7 +10,7 @@
     "workspaceFolder": "/workspace/projetLaravel",
 
     "forwardPorts": [
-        8000,
+        80,
         8080
     ],
 
