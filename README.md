@@ -26,6 +26,7 @@ GitHub Codespace
 │   ├── PHP 8.4
 │   ├── Composer
 │   ├── PDO MySQL
+│   ├── ACL
 │   └── projetLaravel
 │
 ├── mysql
@@ -52,6 +53,7 @@ Il contient :
 - Composer ;
 - Git ;
 - PDO MySQL ;
+- les outils ACL ;
 - un terminal Linux.
 
 Le dossier de travail est :
@@ -68,13 +70,13 @@ Ce dossier est destiné à accueillir le projet Laravel.
 
 Apache est installé et démarré automatiquement dans le conteneur `app`.
 
-Le dossier Web utilisé par Apache est :
+Le dossier Web configuré dans Apache est :
 
 ```text
 /workspace/projetLaravel/public
 ```
 
-Il correspond au futur dossier `public` de Laravel.
+Il correspond au dossier `public` d'un projet Laravel.
 
 L'application Web est accessible depuis le port :
 
@@ -100,7 +102,7 @@ Apache
 /workspace/projetLaravel/public
 ```
 
-Il n'est donc pas nécessaire de lancer :
+Il n'est pas nécessaire de lancer :
 
 ```bash
 php artisan serve
@@ -114,13 +116,13 @@ Apache assure automatiquement le service Web.
 
 PHP 8.4 est installé dans le conteneur `app`.
 
-Le pilote :
+Le pilote PHP :
 
 ```text
 pdo_mysql
 ```
 
-est également installé automatiquement.
+est installé automatiquement lors de la construction du conteneur.
 
 Il permet à PHP et Laravel de communiquer avec le serveur MySQL.
 
@@ -148,7 +150,78 @@ Sa présence peut être vérifiée avec :
 composer --version
 ```
 
-Composer sera utilisé pour installer Laravel et gérer ses dépendances PHP.
+Composer est utilisé pour installer Laravel et gérer les dépendances PHP du projet.
+
+---
+
+# Gestion des droits Apache
+
+Apache exécute PHP avec l'utilisateur système :
+
+```text
+www-data
+```
+
+Laravel doit pouvoir écrire dans certains dossiers, notamment :
+
+```text
+storage
+bootstrap/cache
+```
+
+Afin d'éviter des erreurs de droits lors de l'exécution de Laravel, l'environnement utilise les **ACL (Access Control Lists)**.
+
+Le paquet :
+
+```text
+acl
+```
+
+est installé dans le conteneur `app`.
+
+Lors de la création du Codespace, des droits sont automatiquement attribués à l'utilisateur `www-data` sur :
+
+```text
+/workspace/projetLaravel
+```
+
+Des droits ACL par défaut sont également définis.
+
+Ainsi, les futurs fichiers et dossiers créés lors de l'installation de Laravel héritent des droits nécessaires à Apache.
+
+Le fonctionnement est le suivant :
+
+```text
+Création du Codespace
+        │
+        ▼
+Application des droits ACL
+        │
+        ▼
+www-data peut écrire dans projetLaravel
+        │
+        ▼
+Installation de Laravel
+        │
+        ├── storage
+        │
+        └── bootstrap/cache
+                │
+                ▼
+        Droits hérités automatiquement
+```
+
+Il n'est donc normalement pas nécessaire d'exécuter manuellement :
+
+```bash
+chown -R www-data:www-data storage bootstrap/cache
+```
+
+ou :
+
+```bash
+chmod -R 775 storage bootstrap/cache
+```
 
 ---
 
@@ -236,7 +309,16 @@ Il définit notamment :
 - le conteneur `app` comme environnement de développement ;
 - le dossier `/workspace/projetLaravel` comme dossier de travail ;
 - les ports `8000` et `8080` ;
-- les extensions VS Code installées automatiquement.
+- les extensions VS Code installées automatiquement ;
+- la commande exécutée après la création du Codespace.
+
+La commande `postCreateCommand` :
+
+```bash
+setfacl -m u:www-data:rwx /workspace/projetLaravel && setfacl -d -m u:www-data:rwx /workspace/projetLaravel && composer --version
+```
+
+configure les droits ACL nécessaires à Apache et vérifie la présence de Composer.
 
 ---
 
@@ -267,7 +349,7 @@ Le port Apache est publié de la manière suivante :
 8000:80
 ```
 
-Le port `8000` du Codespace permet ainsi d'accéder au port `80` d'Apache dans le conteneur `app`.
+Le port `8000` permet ainsi d'accéder au port `80` d'Apache dans le conteneur `app`.
 
 ---
 
@@ -279,7 +361,7 @@ Le fichier :
 .devcontainer/Dockerfile
 ```
 
-construit le conteneur `app`.
+construit et personnalise le conteneur `app`.
 
 Il utilise comme image de base :
 
@@ -287,15 +369,21 @@ Il utilise comme image de base :
 php:8.4-apache
 ```
 
-Il ajoute notamment :
+Il ajoute :
 
 - Git ;
 - unzip ;
+- ACL ;
 - PDO MySQL ;
-- le module Apache `rewrite` ;
 - Composer.
 
-Apache est également configuré pour utiliser :
+Il active également le module Apache :
+
+```text
+rewrite
+```
+
+Enfin, Apache est configuré pour utiliser :
 
 ```text
 /workspace/projetLaravel/public
@@ -311,6 +399,7 @@ comme dossier Web.
 devcontainer.json
         │
         │ Configure Codespaces et VS Code
+        │ Applique les droits ACL
         ▼
 docker-compose.yml
         │
@@ -320,7 +409,8 @@ Dockerfile
         │
         │ Construit le conteneur app
         ▼
-Apache + PHP 8.4 + Composer + PDO MySQL
+Apache + PHP 8.4 + Composer
+PDO MySQL + ACL
 ```
 
 ---
@@ -335,18 +425,11 @@ Les composants suivants sont installés et configurés :
 - PHP 8.4 ;
 - Composer ;
 - PDO MySQL ;
+- ACL ;
 - MySQL 8.4 ;
 - phpMyAdmin ;
-- extensions VS Code pour le développement PHP et Laravel.
-
-Les composants suivants ont été vérifiés dans un Codespace neuf :
-
-```bash
-php -v
-composer --version
-php -m | grep pdo_mysql
-apache2ctl -v
-```
+- extensions VS Code pour le développement PHP et Laravel ;
+- gestion automatique des droits nécessaires à Apache.
 
 > **Laravel n'est pas installé ni paramétré dans le dépôt modèle.**
 
@@ -384,11 +467,19 @@ phpmyadmin
 
 Apache démarre automatiquement dans le conteneur `app`.
 
+Les droits nécessaires à Apache sont automatiquement configurés.
+
 ---
 
 # Installation future de Laravel
 
-Dans le terminal du Codespace, se placer dans :
+Dans le terminal du Codespace, vérifier le dossier courant :
+
+```bash
+pwd
+```
+
+Résultat attendu :
 
 ```text
 /workspace/projetLaravel
@@ -399,6 +490,8 @@ Installer Laravel :
 ```bash
 composer create-project laravel/laravel .
 ```
+
+> Attention à ne pas oublier le `.` à la fin de la commande.
 
 Vérifier l'installation :
 
